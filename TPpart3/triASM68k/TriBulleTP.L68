@@ -1,0 +1,321 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 29/01/2024 04:08:31
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :Tri à bulle
+00000000                             3  * Written by :Melvin,Venceslas
+00000000                             4  * Date       :
+00000000                             5  * Description:Cette version du tri est adapté pour des valeurs de un octet et peut marcher pour des word(2) avec quelques modifications, par contre cela sera plus complique avec des long(4)
+00000000                             6  * car l'utilisation de certains operateurs comme divu entrainent un dépassement sur des long
+00000000                             7  *-----------------------------------------------------------
+00001000                             8      ORG    $1000
+00001000                             9  START:                  ; first instruction of program
+00001000                            10  
+00001000                            11  * Put program code here
+00001000  6100 7FFE                 12      bsr initTab
+00001004  6100 0FFA                 13      bsr affTab
+00001008  6100 4FF6                 14      bsr verifTri
+0000100C                            15      *Si trie on ne rentre pas dans l'algo de tri
+0000100C  B67C 0001                 16      cmp #1,d3
+00001010  6700 003A                 17      beq EST_TRIEE
+00001014  2404                      18      move.l d4,d2
+00001016  0644 FFFF                 19      add #-1,d4
+0000101A                            20  *equivalent à une double boucle, à chaque tour on decremente la taille max de notre tableau
+0000101A                            21  *car la valeur la plus grande de notre tri est déjà dedans et ainsi de suite
+0000101A                            22  DEBTRIBULLE
+0000101A  7600                      23      move.l #0,d3    
+0000101C  247C 0000907C             24      move.l #tabvar,a2
+00001022  267C 0000907C             25      move.l #tabvar,a3
+00001028  528B                      26      addq.l #1,a3
+0000102A                            27   
+0000102A                            28  DEBPARCBULLE
+0000102A  6100 5FD4                 29      bsr echangeval
+0000102E  5203                      30      add.b #1,d3
+00001030  528A                      31      addq.l #1,a2
+00001032  528B                      32      addq.l #1,a3    
+00001034  B843                      33      cmp d3,d4
+00001036  66F2                      34      bne DEBPARCBULLE
+00001038  0644 FFFF                 35      add #-1,d4    
+0000103C  B87C 0000                 36      cmp #0,d4
+00001040  66D8                      37      bne DEBTRIBULLE
+00001042  2C02                      38      move.l d2,d6
+00001044  6100 000A                 39      bsr newLinemain
+00001048  6100 0FB6                 40      bsr affTab
+0000104C                            41  EST_TRIEE    
+0000104C                            42      
+0000104C  FFFF FFFF                 43      SIMHALT             ; halt simulator
+00001050                            44      
+00001050  48E7 8040                 45  newLinemain movem.l d0/a1,-(a7) push d0 & a1
+00001054  303C 000E                 46      move    #14,d0      task number into D0
+00001058  43F9 0000608E             47      lea     crlmain,a1     address of string
+0000105E  4E4F                      48      trap    #15         display return, linefeed
+00001060  4CDF 0201                 49      movem.l (a7)+,d0/a1 restore d0 & a1
+00001064  4E75                      50      rts     
+00001066                            51  
+00001066                            52  * Appels de toutes nos bibliotheques de fonction, elle sont basées sur les programmes des exos précédent avec
+00001066                            53  * quelques modifications pour tout faire marcher globalement
+00001066                            54      INCLUDE "C:\Users\melvi\Desktop\asmtp\TPpart3\triASM68k\initTab.X68"
+00009000                            55      ORG    $9000
+00009000                            56  
+00009000                            57  initTab                  ; first instruction of program
+00009000                            58      *on initialise le nombre max de notre tableau possible
+00009000  307C 94B9                 59      move.w #limiternum,a0
+00009004  10BC 0064                 60      move.b #100,(a0)
+00009008                            61      *on choisit une valeur aléatoire à additionner
+00009008  307C 94BD                 62      move.w #valadd,a0
+0000900C  10BC 0043                 63      move.b #67,(a0)
+00009010                            64  
+00009010                            65   *On recupere la taille du tableau    
+00009010  303C 000E                 66      move #14,d0
+00009014  43F9 00009464             67      lea text_tab,a1 
+0000901A  4E4F                      68      trap #15
+0000901C  6100 0048                 69      bsr newline
+00009020                            70   
+00009020  7004                      71      move.l #4,d0
+00009022  4E4F                      72      trap #15
+00009024                            73      *on stock la taille du tableau dans un registre
+00009024  2A01                      74      move.l d1,d5
+00009026  2C01                      75      move.l d1,d6
+00009028  2801                      76      move.l d1,d4
+0000902A                            77      *on pointe le debut du tableau
+0000902A  227C 0000907C             78      move.l #tabvar,a1
+00009030                            79      
+00009030                            80  REPETE:
+00009030  7200                      81      move.l #0,d1
+00009032                            82      *On recupere le timstamp
+00009032  303C 0008                 83      move #8,d0
+00009036                            84      *on ne garde que la partie des secondes écoulées
+00009036  4E4F                      85      trap #15
+00009038  4841                      86      swap d1
+0000903A  4241                      87      clr.w d1
+0000903C  4841                      88      swap d1
+0000903E                            89      *On calcule notre nombre (tempshorloge+valadd)%limite
+0000903E  7400                      90      move.l #0,d2
+00009040  307C 94BD                 91      move.w #valadd,a0
+00009044  1410                      92      move.b (a0),d2    
+00009046  D202                      93      add.b d2,d1
+00009048  7400                      94      move.l #0,d2   
+0000904A  307C 94B9                 95      move.w #limiternum,a0
+0000904E  1410                      96      move.b (a0),d2
+00009050  82C2                      97      divu d2,d1
+00009052                            98      *On récupére le reste
+00009052  4241                      99      clr.w d1
+00009054  4841                     100      swap d1 
+00009056                           101      *on enregistre la valeur dans notre tableau
+00009056  1281                     102      move.b d1,(a1)
+00009058                           103      *on increment l'indice de notre tableau
+00009058  5289                     104      addq.l #1,a1
+0000905A                           105      *on decremente le tab
+0000905A  0645 FFFF                106      add #-1,d5        
+0000905E  BA7C 0000                107      cmp #0,d5
+00009062  66CC                     108      BNE REPETE
+00009064  4E75                     109      rts
+00009066                           110   
+00009066  48E7 8040                111  newLine movem.l d0/a1,-(a7) push d0 & a1
+0000906A  303C 000E                112      move    #14,d0      task number into D0
+0000906E  43F9 000094BA            113      lea     crlfinit,a1     address of string
+00009074  4E4F                     114      trap    #15         display return, linefeed
+00009076  4CDF 0201                115      movem.l (a7)+,d0/a1 restore d0 & a1
+0000907A  4E75                     116      rts 
+0000907C                           117      
+0000907C                           118  tabvar ds.b 1000
+00009464                           119      ds.w 0
+00009464= 64 6F 6E 6E 65 7A ...    120  text_tab  dc.b    'donnez la taille du tableau: ',0   null terminated string
+00009482= 44 6F 6E 6E 65 7A ...    121  textval  dc.b    'Donnez une valeur pour le tableau ou -1 pour arreter: ',0   null terminated string
+000094B9                           122  limiternum ds.b 1  *permet de fixer une taille max à notre nombre
+000094BA= 0D 0A 00                 123  crlfinit    dc.b    $d,$a,0     carriage return & line feed, null
+000094BD                           124  valadd ds.b 1   *valeur aléatoire ajoute pour generer notre nombre
+000094BE                           125  
+000094BE                           126  
+000094BE                           127  
+000094BE                           128  
+000094BE                           129  
+000094BE                           130  
+000094BE                           131  
+000094BE                           132  
+000094BE                           133  
+000094BE                           134  
+000094BE                           135  
+000094BE                           136  
+000094BE                           137  
+000094BE                           138  
+000094BE                           139  
+000094BE                           140  
+000094BE                           141  
+000094BE                           142  
+000094BE                           143  -------------------- end include --------------------
+000094BE                           144      INCLUDE "C:\Users\melvi\Desktop\asmtp\TPpart3\triASM68k\affTab.X68"
+00002000                           145      ORG    $2000
+00002000                           146  
+00002000                           147  affTab
+00002000  247C 0000907C            148      move.l #tabvar,a2
+00002006                           149  REPETEAFF:
+00002006  1212                     150      move.b (a2),d1
+00002008  7003                     151      move.l #3,d0
+0000200A  4E4F                     152      trap #15
+0000200C  700E                     153      move.l #14,d0
+0000200E  43F9 0000203E            154      lea texttiret,a1 
+00002014  4E4F                     155      trap #15
+00002016  528A                     156      addq.l #1,a2
+00002018  0646 FFFF                157      add #-1,d6         
+0000201C  BC7C 0000                158      cmp #0,d6   
+00002020  66E4                     159      BNE REPETEAFF
+00002022                           160      *On affiche le resultat de l'addition
+00002022  6100 0004                161      bsr newlineaff
+00002026  4E75                     162      rts
+00002028                           163  
+00002028                           164  
+00002028  48E7 8040                165  newLineaff movem.l d0/a1,-(a7) push d0 & a1
+0000202C  303C 000E                166      move    #14,d0      task number into D0
+00002030  43F9 00002040            167      lea     crlf,a1     address of string
+00002036  4E4F                     168      trap    #15         display return, linefeed
+00002038  4CDF 0201                169      movem.l (a7)+,d0/a1 restore d0 & a1
+0000203C  4E75                     170      rts 
+0000203E                           171  
+0000203E= 2D 00                    172  texttiret dc.b '-',0    
+00002040= 0D 0A 00                 173  crlf    dc.b    $d,$a,0     carriage return & line feed, null
+00002043                           174  
+00002043                           175  
+00002043                           176  
+00002043                           177  -------------------- end include --------------------
+00002043                           178      INCLUDE "C:\Users\melvi\Desktop\asmtp\TPpart3\triASM68k\echangeval.X68"
+00007000                           179      ORG    $7000
+00007000                           180      
+00007000                           181  echangeval    
+00007000  1A12                     182      move.b (a2),d5
+00007002  1C13                     183      move.b (a3),d6
+00007004                           184  verifcroissant
+00007004  BC45                     185      cmp d5,d6
+00007006  6E00 0006                186      bgt finverifcroissant    
+0000700A  1692                     187      move.b (a2),(a3)
+0000700C  1486                     188      move.b d6,(a2)
+0000700E                           189  finverifcroissant
+0000700E  4E75                     190      rts    
+00007010                           191  
+00007010                           192  
+00007010                           193  
+00007010                           194  
+00007010                           195  
+00007010                           196  
+00007010                           197  
+00007010                           198  
+00007010                           199  
+00007010                           200  -------------------- end include --------------------
+00007010                           201      INCLUDE "C:\Users\melvi\Desktop\asmtp\TPpart3\triASM68k\verifTri.X68" 
+00006000                           202      ORG    $6000
+00006000                           203  
+00006000                           204  
+00006000                           205  veriftri
+00006000                           206      *on renseigne notre compteur
+00006000  3C3C 0000                207      move #0,d6
+00006004  247C 0000907C            208      move.l #tabvar,a2
+0000600A  1212                     209      move.b (a2),d1
+0000600C                           210      *d5 sert de booleen pour verifier le tri du tableau
+0000600C  7A00                     211      move.l #0,d5
+0000600E  6100 002C                212      bsr parctab
+00006012                           213  SI_NON_TRIE:
+00006012  BA7C 0000                214      cmp #0,d5
+00006016  6700 0014                215      beq SINON_TRIE
+0000601A                           216  ALORS_NON_TRIE:
+0000601A  303C 000E                217      move #14,d0
+0000601E  43F9 00006073            218      lea text_nontrie,a1
+00006024  4E4F                     219      trap #15
+00006026  7600                     220      move.l #0,d3
+00006028  6000 0010                221      bra FINAFF
+0000602C                           222  FINALORS_NON_TRIE:
+0000602C                           223  
+0000602C                           224  SINON_TRIE:
+0000602C  303C 000E                225      move #14,d0
+00006030  43F9 0000605E            226      lea text_trie,a1
+00006036  4E4F                     227      trap #15
+00006038  7601                     228      move.l #1,d3
+0000603A                           229  FINSINON_TRIE:
+0000603A                           230  FINAFF:
+0000603A  4E75                     231      rts
+0000603C                           232  
+0000603C                           233  parctab
+0000603C                           234  VERIFTBOUCLE:
+0000603C  BC44                     235      cmp d4,d6
+0000603E  6700 001C                236      beq FINVERIFB
+00006042                           237  CMPTRI:
+00006042                           238      *on conpare l'élément actuelle au precedent
+00006042  1612                     239      move.b (a2),d3
+00006044  B203                     240      cmp.b d3,d1
+00006046  6E00 0006                241      bgt CPMTFALSE
+0000604A                           242  FINCMPTRI:
+0000604A  6000 0008                243      bra FINVERIFTRI
+0000604E                           244  CPMTFALSE:
+0000604E                           245      *ici on renvoie la taille max de tab à d6 pour sortir de la boucle 
+0000604E  7A01                     246      move.l #1,d5
+00006050  6000 000A                247      bra FINVERIFB
+00006054                           248  FINVERIFTRI:
+00006054                           249      *Si on ne rentre pas dans if f1 prend la valeur actulle pointe par l'adresse a2
+00006054                           250      *On incremente l'adresse de a2 et la valeur dans d6
+00006054  1212                     251      move.b (a2),d1
+00006056  528A                     252      addq.l #1,a2
+00006058  5206                     253      add.b #1,d6    
+0000605A  60E0                     254      BRA VERIFTBOUCLE
+0000605C                           255  FINVERIFB 
+0000605C  4E75                     256      rts    
+0000605E                           257      
+0000605E= 6C 65 20 74 61 62 ...    258  text_trie dc.b 'le tableau est triee',0
+00006073= 6C 65 20 74 61 62 ...    259  text_nontrie dc.b 'le tableau n est pas triee',0
+0000608E                           260  
+0000608E                           261  
+0000608E                           262  
+0000608E                           263  
+0000608E                           264  
+0000608E                           265  
+0000608E                           266  
+0000608E                           267  -------------------- end include --------------------
+0000608E                           268  
+0000608E= 0D 0A 00                 269  crlmain    dc.b    $d,$a,0     carriage return & line feed, null
+00006091                           270      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+AFFTAB              2000
+ALORS_NON_TRIE      601A
+CMPTRI              6042
+CPMTFALSE           604E
+CRLF                2040
+CRLFINIT            94BA
+CRLMAIN             608E
+DEBPARCBULLE        102A
+DEBTRIBULLE         101A
+ECHANGEVAL          7000
+EST_TRIEE           104C
+FINAFF              603A
+FINALORS_NON_TRIE   602C
+FINCMPTRI           604A
+FINSINON_TRIE       603A
+FINVERIFB           605C
+FINVERIFCROISSANT   700E
+FINVERIFTRI         6054
+INITTAB             9000
+LIMITERNUM          94B9
+NEWLINE             9066
+NEWLINEAFF          2028
+NEWLINEMAIN         1050
+PARCTAB             603C
+REPETE              9030
+REPETEAFF           2006
+SINON_TRIE          602C
+SI_NON_TRIE         6012
+START               1000
+TABVAR              907C
+TEXTTIRET           203E
+TEXTVAL             9482
+TEXT_NONTRIE        6073
+TEXT_TAB            9464
+TEXT_TRIE           605E
+VALADD              94BD
+VERIFCROISSANT      7004
+VERIFTBOUCLE        603C
+VERIFTRI            6000
